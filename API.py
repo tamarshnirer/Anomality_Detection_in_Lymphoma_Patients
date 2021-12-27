@@ -27,7 +27,7 @@ def compute_results():
 root = Tk()
 root.title("Lymphoma Prediction System")
 
-label2 = Label(root, text = "Please fill the following fields:").grid(row=0, column=0)
+label2 = Label(root, text = "Please fill in the following fields:").grid(row=0, column=0)
 
 row = 6
 ''''
@@ -88,5 +88,5 @@ for col in numeric_coluns:
     row+=2
 
 
-submit_button = Button(root, text = 'Submit', command = compute_results, bg = "blue").grid(row=40, column=1)
+submit_button = Button(root, text = 'Submit', command = compute_results, bg = "#0099ff").grid(row=40, column=1)
 root.mainloop()
