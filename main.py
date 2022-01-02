@@ -9,25 +9,16 @@ import pandas as pd
 
 class Initial_pre_processing_Transformer(TransformerMixin):
     '''
-    Performs initial preprocessing on the input DataFrame:
-    1) Dropping irrelevant columns for prediction
-    2) Mapping the following columns to Boolean(1/0): "Gender", "Included in Survival Analysis", "Number of Extranodal Sites" -> "Binary_num_of_nodes" if number is greater than zero.
-
-    Parameters
-    ----------
-    None
-    Returns
-    ----------
-    DataFrame
-    Returns the input df after initial preprocessing
-    '''   
+    Imputes the numeric_fill_na_with_zeros columns with 0, creates a new column of the total number of guests, 
+    Transforms the category_cols into one hot encoder
+    '''
 #     X_cols = []
     def __init__(self):
         pass
     
     def fit(self,X,y=None):
         '''
-        Returns Self
+        Learn a vocabulary dictionary of all tokens in the the category_cols.
 
         Parameters
         ----------
@@ -40,19 +31,18 @@ class Initial_pre_processing_Transformer(TransformerMixin):
     
     def transform(self,X):
         '''
-        Performs all initial preprocessing:
-            1) Dropping irrelevant columns for prediction
-            2) Mapping the following columns to Boolean(1/0): "Gender", "Included in Survival Analysis", "Number of Extranodal Sites" -> "Binary_num_of_nodes" if number is greater than zero.
+        Transforms num_cat columns to a sparse matrix
+
         Parameters
         ----------
         None
         Returns
         ----------
-         DataFrame
-        Returns the input df after initial preprocessing
+        Sparse Matrix
+            Matrix consisting of the numeric columns, the numeric_fill_na after imputation with 0, num_of_guest collumn and OHE columns
         '''   
         X_copy = X.copy()
-        X_copy.drop(X_copy.columns[[0, 2]], axis=1, inplace = True) #dropping the diagnosis (the same for all) and other two feature that might predict what we're trying to predict 
+        X_copy.drop(X_copy.columns[[0, 1, 2]], axis=1, inplace = True) #dropping the diagnosis (the same for all) and other two feature that might predict what we're trying to predict 
         X_copy['Gender'] = X_copy['Gender'].map({'M': 0,'F': 1})
         X_copy['Included in Survival Analysis'] = X_copy['Included in Survival Analysis'].map({'Yes': 1,'No': 0})
         X_copy.replace("Pre-treatment", "Pretreatment",inplace=True)
@@ -68,13 +58,15 @@ class FeatureTransformer(TransformerMixin):
     def __init__(self,  is_numeric_Transformer=True, is_cat_Transformer=True, is_ipi_values_Transformer=True
                 ):
         '''
-        Consists of 3 transformers: 1) numeric_Transformer, 2) cat_Transformer, 3) ipi_values_Transformer, 
+        Consists of 5 transformers: 1) time_until_order_transformer, 2) num_cat_Transformer, 3) deposit_OHE, 4) country_OHE, 5) anon_Transformer
         
         Parameters
         ----------
-        1) is_numeric_Transformer - True if we want to enable the numeric_Transformer, Otherwise False
-        2) is_cat_Transformer - True if we want to enable the cat_Transformer, Otherwise False
-        3) is_ipi_values_Transformer - True if we want to enable the ipi_values_Transformer, Otherwise False
+        1) is_time_until_order_transformer - True if we want to enable the time_until_order_transformer, Otherwise False
+        2) is_num_cat_Transformer - True if we want to enable the num_cat_Transformer, Otherwise False
+        3) is_deposit_OHE - True if we want to enable the deposit_OHE, Otherwise False
+        4) is_country_OHE - True if we want to enable the country_OHE, Otherwise False
+        5) is_anon_Transformer - True if we want to enable the anon_Transformer, Otherwise False
         '''
         feature_for_transformer =[]
 
@@ -129,17 +121,6 @@ class FeatureTransformer(TransformerMixin):
 
 #***************************************************************************************
 class numeric_Transformer(TransformerMixin):
-    '''
-    Imputes all numeric columns with their medians on the training set.
-
-    Parameters
-    ----------
-    None
-    Returns
-    ----------
-    Sparse Matrix
-            Matrix consisting of the numeric columns after imputation
-    '''   
     numeric_features = ['Ann Arbor Stage','LDH Ratio','ECOG Performance Status','Gender','Age',
                        'Follow up Status Alive=0 Dead=1', 'Follow up Time (yrs)',
        'PFS Status No Progress=0 Progress=1', 'PFS (yrs)',
@@ -153,7 +134,7 @@ class numeric_Transformer(TransformerMixin):
 
     def fit(self, X, y=None):
         '''
-        Learn the median values of the numeric columns
+        Learn the median values of the anon columns
 
         Parameters
         ----------
@@ -168,7 +149,7 @@ class numeric_Transformer(TransformerMixin):
     
     def transform(self, X, y=None):
         '''
-        Transforms all anon numeric to a sparse matrix
+        Transforms all anon features to a sparse matrix
 
         Parameters
         ----------
@@ -176,16 +157,18 @@ class numeric_Transformer(TransformerMixin):
         Returns
         ----------
         Sparse Matrix
-            Matrix consisting of all numeric features after imputation with median values
+            Matrix consisting of all anon features after imputation with median values
         '''   
         X_copy = X.copy()        
+
+        # Calculate median of every anon feature (separately) and impute with median
 
         X_num = csr_matrix(X_copy[self.numeric_features].fillna(self.num_medians).apply(pd.to_numeric,errors='coerce').values.astype(float))
         return sparse_hstack([X_num])
     
     def get_feature_names(self):
         '''
-        returns a list of feature names consisting of each of the numeric_features.
+        returns a list of feature names consisting of each of the anon_features.
         Parameters
         ----------
         None
@@ -200,17 +183,9 @@ class numeric_Transformer(TransformerMixin):
 
 class cat_Transformer(TransformerMixin):
     '''
-    Imputes all missing values in the category columns with 'unknown' and transforms the category_cols into OHE
-    
-    Parameters
-    ----------
-    None
-    Returns
-    ----------
-    Sparse Matrix
-            Matrix consisting of the numeric columns after imputation        
-    '''   
-    
+    Imputes the numeric_fill_na_with_zeros columns with 0, creates a new column of the total number of guests, 
+    Transforms the category_cols into OHE
+    '''    
     category_cols = ['Gene Expression Subgroup','Biopsy Type','Treatment', 'Genetic Subtype']
     
     def __init__(self):
@@ -236,7 +211,7 @@ class cat_Transformer(TransformerMixin):
     
     def transform(self,X):
         '''
-        Transforms category columns to a sparse matrix
+        Transforms num_cat columns to a sparse matrix
 
         Parameters
         ----------
@@ -244,7 +219,7 @@ class cat_Transformer(TransformerMixin):
         Returns
         ----------
         Sparse Matrix
-            Matrix consisting of the OHE columns
+            Matrix consisting of the numeric columns, the numeric_fill_na after imputation with 0, num_of_guest collumn and OHE columns
         '''   
         X_copy = X.copy()        
         X_one_hot_category = self.category_feature_union.transform(X[self.category_cols].fillna(''))
@@ -252,7 +227,7 @@ class cat_Transformer(TransformerMixin):
 
     def get_feature_names(self):
         '''
-        returns a list of feature names consisting of each of the category cols.
+        returns a list of feature names consisting of each of the num_cat cols.
         Parameters
         ----------
         None
@@ -266,17 +241,6 @@ class cat_Transformer(TransformerMixin):
         return X_one_hot_category
     
 class OHEcol(TransformerMixin):
-    '''
-    This transformer receives as an input one category column at each time. Imputes missing values with 'unknown' and applies a CountVectorizer on the column.
-
-    Parameters
-    ----------
-    None
-    Returns
-    ----------
-    Sparse Matrix
-            Matrix consisting of the OHE of the column
-    '''
     def __init__(self,col):
         self.col = col
         self.cv = CountVectorizer(min_df=0.05)
@@ -319,7 +283,7 @@ class OHEcol(TransformerMixin):
         Returns
         ----------
         Sparse Matrix
-            Matrix consisting a OHE for the column values that appeared in at least 0.05 of the data (min_df=0.05)
+            Matrix consisting a OHE for the column values that appeared in at lease 0.001 of the data (min_df=0.001)
         '''   
         return self.cv.transform(self._prepare(X).astype(str))
     
@@ -340,19 +304,7 @@ class OHEcol(TransformerMixin):
 
 class ipi_values_Transformer(TransformerMixin):
     
-    '''
-    This transformer gets as an input a dataframe with the following columns: 1) 'IPI Group', 2) 'IPI Range' and performs the following:
-    1) Imputes missing 'IPI Group' values based on the range, based on the logic - Low (0-1), Intermediate (2-3), High (4-5)
-    2) Calculates mean, min and max IPI Values
-    
-    Parameters
-    ----------
-    None
-    Returns
-    ----------
-    Sparse Matrix
-            Matrix consisting of the new calculated columns        
-    '''  
+#     relevant_cols = ['IPI Group','IPI Range']
     
     def __init__(self):
         pass
@@ -361,7 +313,8 @@ class ipi_values_Transformer(TransformerMixin):
 
     def fit(self, X, y=None):
         '''
-        Returns self
+        Learn the median values of the relevant_col
+
         Parameters
         ----------
         None
@@ -373,8 +326,8 @@ class ipi_values_Transformer(TransformerMixin):
     
     def transform(self, X, y=None):
         '''
-        1) Imputes missing 'IPI Group' values based on the range, based on the logic - Low (0-1), Intermediate (2-3), High (4-5)
-        2) Calculates mean, min and max IPI Values
+        Transforms fixed relevant_col to a sparse matrix
+
         Parameters
         ----------
         None
@@ -429,6 +382,7 @@ class ipi_values_Transformer(TransformerMixin):
             else:
                 return number    
             
+#         X_mean = csr_matrix(self._impute(X).apply(lambda row: get_mean_ipi(row)).values)
         X_mean = csr_matrix(X['IPI Range'].apply(lambda row: get_mean_ipi(row)).values).T
         X_min = csr_matrix(X['IPI Range'].apply(lambda row: get_min_ipi(row)).values).T
         X_max = csr_matrix(X['IPI Range'].apply(lambda row: get_max_ipi(row)).values).T
