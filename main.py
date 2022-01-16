@@ -50,9 +50,9 @@ class Initial_pre_processing_Transformer(TransformerMixin):
         Returns the input df after initial preprocessing
         '''   
         X_copy = X.copy()
-        X_copy.drop(X_copy.columns[[0, 2]], axis=1, inplace = True) #dropping the diagnosis (the same for all) and other two feature that might predict what we're trying to predict 
+        X_copy.drop(X_copy.columns[[0, 2, 19]], axis=1, inplace = True) #dropping the diagnosis (the same for all) and other two feature that might predict what we're trying to predict 
         X_copy['Gender'] = X_copy['Gender'].map({'M': 0,'F': 1})
-        X_copy['Included in Survival Analysis'] = X_copy['Included in Survival Analysis'].map({'Yes': 1,'No': 0})
+#         X_copy['Included in Survival Analysis'] = X_copy['Included in Survival Analysis'].map({'Yes': 1,'No': 0})
         X_copy.replace("Pre-treatment", "Pretreatment",inplace=True)
         X_copy['binary_num_of_nodes'] = X_copy['Number of Extranodal Sites'].copy()
                 
@@ -139,8 +139,8 @@ class numeric_Transformer(TransformerMixin):
     '''   
     numeric_features = ['Ann Arbor Stage','LDH Ratio','ECOG Performance Status','Gender','Age',
                        'Follow up Status Alive=0 Dead=1', 'Follow up Time (yrs)',
-       'PFS Status No Progress=0 Progress=1', 'PFS (yrs)',
-       'Included in Survival Analysis']
+       'PFS Status No Progress=0 Progress=1', 'PFS (yrs)']
+#        'Included in Survival Analysis']
 
     num_of_numeric_features = len(numeric_features)
     def __init__(self,num_medians=np.zeros(num_of_numeric_features), **cv_kwargs):
