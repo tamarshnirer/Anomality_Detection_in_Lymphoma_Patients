@@ -22,5 +22,7 @@ minmaxScalerX.pkl -                                                             
 
 prognostics_dev.csv -                                                              The dataset
 
+Anomaly Detection in Lymphoma Patients - Tamar & Lin (1).pptx -                    The presentation we showed in class
 
+Project Report - Tamar & Lin (1).pdf                                               Project Report (Hebrew)
 
