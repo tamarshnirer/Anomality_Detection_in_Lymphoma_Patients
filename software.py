@@ -12,10 +12,18 @@ with open('finalized_RF_model.sav', 'rb') as f:
     rf = pickle.load(f)
 with open('feature_transformer.pkl', 'rb') as f:
     transformer = pickle.load(f)
-with open('standardScalerX.pkl', 'rb') as f:
+with open('minmaxScalerX.pkl', 'rb') as f:
     scaler = pickle.load(f)
 
 Initial_pre_processing_Transformer = Initial_pre_processing_Transformer()
+feat_group = ['num__ann arbor stage', '__gene expression subgroup__gcb',\
+       'ipi_values__min', 'ipi_values__max',\
+       '__gene expression subgroup__unclass',\
+       'num__ecog performance status', '__genetic subtype__ezb',\
+       '__genetic subtype__bn2', 'num__ldh ratio',\
+       '__genetic subtype__mcd', 'ipi_values__mean',\
+       'num__follow up status alive=0 dead=1', 'num__gender',\
+       '__gene expression subgroup__abc', 'num__pfs (yrs)']
 
 def compute_results():
     global Age
@@ -39,7 +47,7 @@ def compute_results():
                                  index=df_after_preprocessing.index, columns=transformer.get_feature_names())
     X = pd.DataFrame(scaler.transform(x_transformed),
                                    columns=x_transformed.columns)
-    pred = rf.predict_proba(X)
+    pred = rf.predict_proba(X[feat_group])
     output = f"This patient {round(pred[0,1],4)} chances of having extanodal site\s"
 
     Label(root, text = output).grid(row=41, column=1)
