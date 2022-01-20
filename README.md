@@ -1,6 +1,6 @@
 Anomaly Detection in Lymphoma Patients
 
-Here's a quick description for each of the files/folders in this main branch
+Here's a quick description for each of the files/folders in this main branch:
 
 File Name -                                                                        Description
 
