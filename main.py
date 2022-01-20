@@ -50,7 +50,7 @@ class Initial_pre_processing_Transformer(TransformerMixin):
         Returns the input df after initial preprocessing
         '''   
         X_copy = X.copy()
-        X_copy.drop(X_copy.columns[[0, 2, 19]], axis=1, inplace = True) #dropping the diagnosis (the same for all) and other two feature that might predict what we're trying to predict 
+        X_copy.drop(['dbGaP submitted subject ID', 'Diagnosis','Included in Survival Analysis'], axis=1, inplace = True) #dropping the diagnosis (the same for all) and other two feature that might predict what we're trying to predict 
         X_copy['Gender'] = X_copy['Gender'].map({'M': 0,'F': 1})
 #         X_copy['Included in Survival Analysis'] = X_copy['Included in Survival Analysis'].map({'Yes': 1,'No': 0})
         X_copy.replace("Pre-treatment", "Pretreatment",inplace=True)
